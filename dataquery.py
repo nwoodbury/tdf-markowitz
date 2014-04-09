@@ -6,7 +6,7 @@ if __name__ == '__main__':
     url = 'http://ideaquant.cs.byu.edu/allhistories?n=20'
     r = requests.get(url)
 
-    symbols = ['AAPL', 'MSFT', 'YHOO', 'MU',
+    symbols = ['DIS', 'MSFT', 'YHOO', 'MU',
                'XOM', 'GE', 'CVX',
                'C', 'BAC', 'JPM']
 

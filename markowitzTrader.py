@@ -1,7 +1,6 @@
 import tdfTrader as trader
 import pandas as pd
 import math
-#import random
 import pulp
 
 # TDF Information
@@ -100,7 +99,6 @@ def get_stock_data(src='tdf'):
         if src == 'tdf':
             histories = pd.DataFrame(trader.allHistories(host))
             histories = histories.transpose()[symbols]
-            #histories = histories[0:20]
             histories = histories.apply(lambda x: __ap_row(x), axis=1)
         else:
             histories = pd.read_csv('biddata.csv', parse_dates=True,
@@ -160,8 +158,9 @@ def get_mad_lp(returns, means, mu, lb=0):
     for j in range(0, len(y)):
         row = returns.iloc[j]
         problem += sum((means[i] - row[i]) * x[i] for i in x) <= y[j]
+        problem += sum((means[i] - row[i]) * x[i] for i in x) >= -y[j]
 
-    return problem, x
+    return problem, x, y
 
 
 def solve_problem(problem, x):
@@ -310,10 +309,16 @@ if __name__ == '__main__':
 
         # Step 2: Formulate the MAD Linear Program
         lb = 0.05
-        problem, x = get_mad_lp(returns, means, 1, lb=lb)
+        mu = 1
+        problem, x, y = get_mad_lp(returns, means, mu, lb=lb)
 
         # Step 3: Solve the MAD LP and collect results
         portfolio = solve_problem(problem, x)
+
+        print 'Expected Returns: %.5f' % sum(x[i].value() * means[i]
+                                             for i in x)
+        T = float(len(y))
+        print 'Expected Risk: %.5f' % sum(y[i].value() * mu / T for i in y)
 
         # Step 4: Convert to shares
         shares = convert_to_shares(portfolio, histories.ix[-1, :], 100000, lb)
